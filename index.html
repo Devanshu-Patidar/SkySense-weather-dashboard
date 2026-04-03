@@ -174,6 +174,22 @@
           </p>
           <div class="forecast-grid" id="forecastGrid" aria-label="5-day forecast">
           </div>
+          <div class="sun-model" id="sunModel" aria-label="Sunrise to sunset tracker">
+            <div class="sun-model-header">
+              <h4>Sunrise → Sunset</h4>
+              <div class="sun-model-times">
+                <span class="sun-time" id="sunriseTime">--:--</span>
+                <span class="sun-time-sep" aria-hidden="true">•</span>
+                <span class="sun-time" id="sunsetTime">--:--</span>
+              </div>
+            </div>
+            <div class="sun-sky" role="img" aria-label="Live sunrise to sunset animation">
+              <div class="sun-arc" aria-hidden="true"></div>
+              <div class="sun-object" id="sunObject" aria-hidden="true"></div>
+              <div class="sun-horizon" aria-hidden="true"></div>
+            </div>
+            <p class="sun-model-caption" id="sunCaption">Search a city to see sunrise and sunset.</p>
+          </div>
         </article>
       </div>
     </section>
