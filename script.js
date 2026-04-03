@@ -67,13 +67,7 @@ const moodLineEl = document.getElementById("moodLine");
 const forecastGridEl = document.getElementById("forecastGrid");
 const hourlyTimelineEl = document.getElementById("hourlyTimeline");
 const showGraphBtn = document.getElementById("showGraphBtn");
-const sunriseTimeEl = document.getElementById("sunriseTime");
-const sunsetTimeEl = document.getElementById("sunsetTime");
-const sunCaptionEl = document.getElementById("sunCaption");
-const sunObjectEl = document.getElementById("sunObject");
 let lastCoords = null;
-let sunAnimRaf = null;
-let sunContext = null;
 
 openDashboardBtn.addEventListener("click", () => {
   dashboardSection.scrollIntoView({ behavior: "smooth" });
@@ -250,87 +244,6 @@ function updateWeatherUI(data, options = {}) {
     humidity,
     windSpeedKmh: Math.round(windSpeed * 3.6),
   });
-
-  updateSunModel({
-    sunriseUtcSeconds: data.sys?.sunrise,
-    sunsetUtcSeconds: data.sys?.sunset,
-    timezoneOffsetSeconds: data.timezone || 0,
-  });
-}
-
-function updateSunModel({ sunriseUtcSeconds, sunsetUtcSeconds, timezoneOffsetSeconds }) {
-  if (!sunriseTimeEl || !sunsetTimeEl || !sunCaptionEl || !sunObjectEl) return;
-  const sunrise = Number(sunriseUtcSeconds);
-  const sunset = Number(sunsetUtcSeconds);
-  const tz = Number(timezoneOffsetSeconds) || 0;
-
-  if (!Number.isFinite(sunrise) || !Number.isFinite(sunset) || sunrise <= 0 || sunset <= 0 || sunset <= sunrise) {
-    sunriseTimeEl.textContent = "--:--";
-    sunsetTimeEl.textContent = "--:--";
-    sunCaptionEl.textContent = "Sunrise/sunset data not available for this location.";
-    sunContext = null;
-    stopSunAnimation();
-    return;
-  }
-
-  const sunriseLocal = new Date(sunrise * 1000 + tz * 1000);
-  const sunsetLocal = new Date(sunset * 1000 + tz * 1000);
-  sunriseTimeEl.textContent = formatTime(sunriseLocal);
-  sunsetTimeEl.textContent = formatTime(sunsetLocal);
-  sunCaptionEl.textContent = "Live sun position updates with local time.";
-
-  sunContext = {
-    sunriseUtcMs: sunrise * 1000,
-    sunsetUtcMs: sunset * 1000,
-    tzSeconds: tz,
-  };
-  startSunAnimation();
-}
-
-function startSunAnimation() {
-  stopSunAnimation();
-  if (!sunContext || !sunObjectEl) return;
-
-  const tick = () => {
-    if (!sunContext || !sunObjectEl) return;
-    const nowUtcMs = Date.now();
-    const nowLocalMs = nowUtcMs + sunContext.tzSeconds * 1000;
-    const sunriseLocalMs = sunContext.sunriseUtcMs + sunContext.tzSeconds * 1000;
-    const sunsetLocalMs = sunContext.sunsetUtcMs + sunContext.tzSeconds * 1000;
-
-    const span = Math.max(1, sunsetLocalMs - sunriseLocalMs);
-    const raw = (nowLocalMs - sunriseLocalMs) / span;
-    const p = Math.min(1, Math.max(0, raw));
-
-    // Track geometry (match CSS): left/right padding 8%, horizon at bottom 22px, arc height 88px.
-    const sky = sunObjectEl.parentElement;
-    const rect = sky?.getBoundingClientRect?.();
-    if (rect && rect.width > 0 && rect.height > 0) {
-      const leftPad = rect.width * 0.08;
-      const rightPad = rect.width * 0.08;
-      const usableW = Math.max(1, rect.width - leftPad - rightPad);
-      const x = leftPad + usableW * p;
-
-      const horizonY = rect.height - 22;
-      const arcH = 88;
-      const y = horizonY - Math.sin(Math.PI * p) * arcH;
-
-      sunObjectEl.style.left = `${x}px`;
-      sunObjectEl.style.top = `${y}px`;
-      sunObjectEl.style.opacity = raw < 0 || raw > 1 ? "0.45" : "1";
-    }
-
-    sunAnimRaf = requestAnimationFrame(tick);
-  };
-
-  sunAnimRaf = requestAnimationFrame(tick);
-}
-
-function stopSunAnimation() {
-  if (sunAnimRaf) {
-    cancelAnimationFrame(sunAnimRaf);
-    sunAnimRaf = null;
-  }
 }
 
 function showStatus(message, type) {

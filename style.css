@@ -621,90 +621,6 @@ input {
   gap: 0.8rem;
 }
 
-.sun-model {
-  margin-top: 1rem;
-  padding: 0.95rem 0.95rem 0.85rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  background: rgba(15, 23, 42, 0.75);
-}
-
-.sun-model-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
-}
-
-.sun-model-header h4 {
-  margin: 0;
-  font-size: 0.98rem;
-}
-
-.sun-model-times {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.86rem;
-  color: #cbd5e1;
-  white-space: nowrap;
-}
-
-.sun-time {
-  font-variant-numeric: tabular-nums;
-}
-
-.sun-sky {
-  position: relative;
-  height: 110px;
-  border-radius: 0.95rem;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: radial-gradient(circle at 30% 18%, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.85)),
-    linear-gradient(180deg, rgba(2, 6, 23, 0.15), rgba(2, 6, 23, 0.65));
-}
-
-.sun-arc {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 22px;
-  height: 88px;
-  border-top-left-radius: 999px;
-  border-top-right-radius: 999px;
-  border: 2px dashed rgba(148, 163, 184, 0.32);
-  border-bottom: 0;
-  opacity: 0.9;
-}
-
-.sun-horizon {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 22px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.55), rgba(148, 163, 184, 0));
-  opacity: 0.65;
-}
-
-.sun-object {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #fff, #fde68a 45%, #f59e0b 100%);
-  box-shadow: 0 10px 22px rgba(251, 191, 36, 0.22), 0 0 0 6px rgba(251, 191, 36, 0.08);
-  transform: translate(-50%, -50%);
-  will-change: left, top;
-}
-
-.sun-model-caption {
-  margin: 0.55rem 0 0;
-  font-size: 0.82rem;
-  color: #9ca3af;
-}
-
 .forecast-day {
   background: rgba(15, 23, 42, 0.9);
   border-radius: 0.9rem;
@@ -1172,33 +1088,6 @@ html.theme-light .forecast-day {
 
 html.theme-light .hourly-time {
   color: #111827;
-}
-
-html.theme-light .sun-model {
-  background: #f9fafb;
-  border-color: rgba(148, 163, 184, 0.65);
-}
-
-html.theme-light .sun-model-times {
-  color: #334155;
-}
-
-html.theme-light .sun-model-caption {
-  color: #4b5563;
-}
-
-html.theme-light .sun-sky {
-  background: radial-gradient(circle at 28% 18%, rgba(37, 99, 235, 0.18), rgba(255, 255, 255, 0.92)),
-    linear-gradient(180deg, rgba(191, 219, 254, 0.75), rgba(255, 255, 255, 0.95));
-  border-color: rgba(148, 163, 184, 0.55);
-}
-
-html.theme-light .sun-arc {
-  border-color: rgba(37, 99, 235, 0.25);
-}
-
-html.theme-light .sun-horizon {
-  background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(37, 99, 235, 0.28), rgba(148, 163, 184, 0));
 }
 
 @media (prefers-reduced-motion: reduce) {
