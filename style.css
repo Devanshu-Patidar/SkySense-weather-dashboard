@@ -220,11 +220,11 @@ input {
 }
 
 .card-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 999px;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(96, 165, 250, 0.5);
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -463,17 +463,62 @@ input {
 }
 
 .weather-icon-wrapper {
-  width: 70px;
-  height: 70px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: fit-content;
+  min-width: 70px;
+  min-height: 70px;
+}
+
+.weather-icon-animated {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(88px, 22vw);
+  height: min(88px, 22vw);
+  filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.35));
+}
+
+/* Meteocons (Bas Milius): animated SVG via <object> — SMIL runs inside each document */
+.weather-icon-animated .wx-meteocon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.hourly-icon-wrap {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 0.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.weather-icon {
-  width: 70px;
-  height: 70px;
-  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.9));
+.hourly-icon-wrap .weather-icon-animated {
+  width: 46px;
+  height: 46px;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.4));
+}
+
+.forecast-day-icon-wrap {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.forecast-day-icon-wrap .weather-icon-animated {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.4));
 }
 
 .hidden {
@@ -552,13 +597,6 @@ input {
   margin-bottom: 0.25rem;
 }
 
-.hourly-icon {
-  width: 46px;
-  height: 46px;
-  margin: 0 auto 0.2rem;
-  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.9));
-}
-
 .hourly-temp {
   font-size: 0.9rem;
   color: #f3f4f6;
@@ -595,13 +633,6 @@ input {
 .forecast-day-label {
   font-weight: 500;
   margin-bottom: 0.35rem;
-}
-
-.forecast-day-icon {
-  width: 52px;
-  height: 52px;
-  margin: 0 auto 0.3rem;
-  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.9));
 }
 
 .forecast-day-temp {
@@ -793,7 +824,8 @@ input {
     font-size: 0.78rem;
   }
 
-  .forecast-day-icon {
+  .forecast-day-icon-wrap,
+  .forecast-day-icon-wrap .weather-icon-animated {
     width: 40px;
     height: 40px;
   }
@@ -803,7 +835,8 @@ input {
     padding: 0.75rem 0.7rem 0.85rem;
   }
 
-  .hourly-icon {
+  .hourly-icon-wrap,
+  .hourly-icon-wrap .weather-icon-animated {
     width: 40px;
     height: 40px;
   }
@@ -957,6 +990,38 @@ html.theme-light .card-icon {
   color: #1d4ed8;
 }
 
+html.theme-light .weather-icon-animated {
+  filter: drop-shadow(0 10px 22px rgba(37, 99, 235, 0.22)) contrast(1.32) saturate(1.35) brightness(1.06);
+}
+
+html.theme-light .weather-icon-animated {
+  width: min(96px, 26vw);
+  height: min(96px, 26vw);
+}
+
+html.theme-light .weather-icon-wrapper,
+html.theme-light .hourly-icon-wrap,
+html.theme-light .forecast-day-icon-wrap {
+  background: radial-gradient(circle at 30% 25%, rgba(37, 99, 235, 0.22), rgba(59, 130, 246, 0.1));
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  border-radius: 1rem;
+}
+
+html.theme-light .weather-icon-wrapper {
+  padding: 0.25rem;
+}
+
+html.theme-light .hourly-icon-wrap,
+html.theme-light .forecast-day-icon-wrap {
+  padding: 0.18rem;
+}
+
+html.theme-light .hourly-icon-wrap .weather-icon-animated,
+html.theme-light .forecast-day-icon-wrap .weather-icon-animated {
+  filter: drop-shadow(0 4px 10px rgba(148, 163, 184, 0.35));
+}
+
 html.theme-light .app-tagline,
 html.theme-light .app-intro {
   color: #1e293b;
@@ -1033,4 +1098,5 @@ html.theme-light .hourly-time {
     animation: none;
     transition: none;
   }
+
 }

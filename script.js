@@ -1,3 +1,44 @@
+/**
+ * Meteocons filled animated SVGs (Bas Milius, MIT).
+ * Full set copied to assets/weather-icons/ (openweathermap/, darksky/, all/).
+ * Preview: https://basmilius.github.io/weather-icons/index-fill.html
+ * License: assets/weather-icons/LICENSE
+ */
+const WEATHER_ICONS_BASE = "assets/weather-icons/";
+const OWM_ICON_DIR = "openweathermap/";
+/** OWM API returns icon codes like 01d, 10n — match exact Meteocons filenames */
+const OWM_ICON_FALLBACK = "03d.svg";
+
+function owmIconFilename(iconCode) {
+  const c = String(iconCode || "").trim().toLowerCase();
+  if (/^(0[1-9]|1[0-3]|50)[dn]$/.test(c)) {
+    return `${c}.svg`;
+  }
+  return OWM_ICON_FALLBACK;
+}
+
+function weatherIconUrl(iconCode) {
+  return `${WEATHER_ICONS_BASE}${OWM_ICON_DIR}${owmIconFilename(iconCode)}`;
+}
+
+function animatedWeatherIconHtml(iconCode) {
+  const src = weatherIconUrl(iconCode);
+  return `<div class="weather-icon-animated" aria-hidden="true"><object class="wx-meteocon" type="image/svg+xml" data="${src}"></object></div>`;
+}
+
+function setWeatherIconElement(el, iconCode, description) {
+  if (!el) return;
+  el.className = "weather-icon-animated";
+  el.textContent = "";
+  const obj = document.createElement("object");
+  obj.className = "wx-meteocon";
+  obj.type = "image/svg+xml";
+  obj.data = weatherIconUrl(iconCode);
+  obj.setAttribute("aria-label", description || "Weather conditions");
+  el.appendChild(obj);
+  el.removeAttribute("aria-hidden");
+}
+
 const API_KEY = "e07a658e5d45c967a443c11cf3b4d0c6";
 const API_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 const FORECAST_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast";
@@ -180,11 +221,12 @@ function updateWeatherUI(data, options = {}) {
   windEl.textContent = `${Math.round(windSpeed * 3.6)} km/h`;
   minMaxEl.textContent = `${minTemp} / ${maxTemp} °C`;
   if (iconCode) {
-    weatherIconEl.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-    weatherIconEl.alt = weatherDescription || "Weather icon";
+    setWeatherIconElement(weatherIconEl, iconCode, weatherDescription || "Weather conditions");
     weatherIconEl.classList.remove("hidden");
   } else {
-    weatherIconEl.classList.add("hidden");
+    weatherIconEl.innerHTML = "";
+    weatherIconEl.className = "weather-icon-animated hidden";
+    weatherIconEl.setAttribute("aria-hidden", "true");
   }
   const nowUtcSeconds = Math.floor(Date.now() / 1000);
   const localSeconds = nowUtcSeconds + (data.timezone || 0);
@@ -551,11 +593,11 @@ function renderHourlyTimeline(items) {
     timeEl.textContent = item.timeLabel || "--:--";
     card.appendChild(timeEl);
     if (item.icon) {
-      const iconEl = document.createElement("img");
-      iconEl.className = "hourly-icon";
-      iconEl.src = `https://openweathermap.org/img/wn/${item.icon}@2x.png`;
-      iconEl.alt = item.description || "Forecast icon";
-      card.appendChild(iconEl);
+      const wrap = document.createElement("div");
+      wrap.className = "hourly-icon-wrap";
+      wrap.innerHTML = animatedWeatherIconHtml(item.icon);
+      wrap.setAttribute("aria-hidden", "true");
+      card.appendChild(wrap);
     }
     const tempEl = document.createElement("div");
     tempEl.className = "hourly-temp";
@@ -630,11 +672,11 @@ function renderForecast(days) {
     labelEl.textContent = index === 0 ? "Today" : formatWeekday(day.date);
     item.appendChild(labelEl);
     if (day.icon) {
-      const iconEl = document.createElement("img");
-      iconEl.className = "forecast-day-icon";
-      iconEl.src = `https://openweathermap.org/img/wn/${day.icon}@2x.png`;
-      iconEl.alt = day.description || "Forecast icon";
-      item.appendChild(iconEl);
+      const wrap = document.createElement("div");
+      wrap.className = "forecast-day-icon-wrap";
+      wrap.innerHTML = animatedWeatherIconHtml(day.icon);
+      wrap.setAttribute("aria-hidden", "true");
+      item.appendChild(wrap);
     }
     const tempEl = document.createElement("div");
     tempEl.className = "forecast-day-temp";
