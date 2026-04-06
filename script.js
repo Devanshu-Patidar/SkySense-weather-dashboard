@@ -675,7 +675,7 @@ async function buildReadableApiError(response) {
   }
   if (response.status === 401) {
     return new Error(
-      "Your API key seems invalid or not yet active. Check the key in script.js, then wait a few minutes and try again." +
+      "Your API key seems invalid or not yet active. Check the key in config.js (or localStorage OWM_API_KEY), then wait a few minutes and try again." +
         details
     );
   }
