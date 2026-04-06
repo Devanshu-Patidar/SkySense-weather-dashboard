@@ -13,6 +13,9 @@ yarn-error.log*
 .env
 .env.*
 
+# Local runtime config (API keys)
+config.js
+
 # Node artifacts (if added later)
 node_modules/
 dist/

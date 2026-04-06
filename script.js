@@ -39,7 +39,33 @@ function setWeatherIconElement(el, iconCode, description) {
   el.removeAttribute("aria-hidden");
 }
 
-const API_KEY = "e07a658e5d45c967a443c11cf3b4d0c6";
+function getOpenWeatherApiKey() {
+  try {
+    const fromWindow = window.__OWM_API_KEY__;
+    if (typeof fromWindow === "string" && fromWindow.trim() && fromWindow !== "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
+      return fromWindow.trim();
+    }
+  } catch {}
+  try {
+    const fromStorage = localStorage.getItem("OWM_API_KEY");
+    if (typeof fromStorage === "string" && fromStorage.trim() && fromStorage !== "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
+      return fromStorage.trim();
+    }
+  } catch {}
+  return "";
+}
+
+function ensureApiKeyOrExplain() {
+  const key = getOpenWeatherApiKey();
+  if (!key) {
+    showStatus(
+      "Missing OpenWeatherMap API key. Create `config.js` (copy from `config.example.js`) or set: localStorage.setItem('OWM_API_KEY','...')",
+      "error"
+    );
+    return "";
+  }
+  return key;
+}
 const API_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 const FORECAST_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0/direct";
@@ -185,13 +211,14 @@ async function fetchWeatherByCity(city) {
 }
 
 async function fetchWeatherByCoords(lat, lon, options = {}) {
-  if (!validateApiKey()) return;
+  const apiKey = ensureApiKeyOrExplain();
+  if (!apiKey) return;
   if (!options.silent) {
     showStatus("Loading weather for your location...", "info");
   }
   renderCityMatches([]);
   try {
-    const url = `${API_BASE_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+    const url = `${API_BASE_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
     const response = await fetch(url);
     if (!response.ok) {
       throw await buildReadableApiError(response);
@@ -667,20 +694,15 @@ async function buildReadableApiError(response) {
 }
 
 function validateApiKey() {
-  if (!API_KEY || API_KEY === "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
-    showStatus(
-      "Please add your OpenWeatherMap API key in script.js before using the app.",
-      "error"
-    );
-    return false;
-  }
-  return true;
+  return Boolean(ensureApiKeyOrExplain());
 }
 
 async function geocodeCity(input) {
   const parsed = parseCityQuery(input);
   const query = parsed.fullQuery;
-  const url = `${GEO_BASE_URL}?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`;
+  const apiKey = ensureApiKeyOrExplain();
+  if (!apiKey) return null;
+  const url = `${GEO_BASE_URL}?q=${encodeURIComponent(query)}&limit=5&appid=${apiKey}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw await buildReadableApiError(response);
@@ -777,10 +799,12 @@ function geoKey(m) {
 }
 async function fetchAndRenderForecast(lat, lon, timezoneOffsetSeconds) {
   if ((!forecastGridEl && !hourlyTimelineEl) || !validateApiKey()) return [];
+  const apiKey = ensureApiKeyOrExplain();
+  if (!apiKey) return [];
   try {
     if (forecastGridEl) forecastGridEl.innerHTML = "";
     if (hourlyTimelineEl) hourlyTimelineEl.innerHTML = "";
-    const url = `${FORECAST_BASE_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+    const url = `${FORECAST_BASE_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
     const response = await fetch(url);
     if (!response.ok) {
       return [];

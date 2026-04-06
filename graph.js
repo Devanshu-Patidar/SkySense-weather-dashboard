@@ -1,4 +1,30 @@
-const API_KEY = "e07a658e5d45c967a443c11cf3b4d0c6";
+function getOpenWeatherApiKey() {
+  try {
+    const fromWindow = window.__OWM_API_KEY__;
+    if (typeof fromWindow === "string" && fromWindow.trim() && fromWindow !== "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
+      return fromWindow.trim();
+    }
+  } catch {}
+  try {
+    const fromStorage = localStorage.getItem("OWM_API_KEY");
+    if (typeof fromStorage === "string" && fromStorage.trim() && fromStorage !== "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
+      return fromStorage.trim();
+    }
+  } catch {}
+  return "";
+}
+
+function ensureApiKeyOrExplain() {
+  const key = getOpenWeatherApiKey();
+  if (!key) {
+    setStatus(
+      "Missing OpenWeatherMap API key. Create `config.js` (copy from `config.example.js`) or set: localStorage.setItem('OWM_API_KEY','...')",
+      true
+    );
+    return "";
+  }
+  return key;
+}
 const FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const AIR_POLLUTION_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
 const WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather";
@@ -206,16 +232,17 @@ function buildHourly24h(list, tzOffset) {
 }
 
 async function fetchData() {
-  if (!lat || !lon || !API_KEY || API_KEY === "YOUR_OPENWEATHERMAP_API_KEY_HERE") {
+  const apiKey = ensureApiKeyOrExplain();
+  if (!lat || !lon || !apiKey) {
     setStatus("Missing location. Search a city on the dashboard first.", true);
     return null;
   }
   setStatus("Loading real-time data...", false);
   try {
     const [forecastRes, airRes, weatherRes] = await Promise.all([
-      fetch(`${FORECAST_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`),
-      fetch(`${AIR_POLLUTION_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
-      fetch(`${WEATHER_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
+      fetch(`${FORECAST_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`),
+      fetch(`${AIR_POLLUTION_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}`),
+      fetch(`${WEATHER_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}`),
     ]);
     const forecast = forecastRes.ok ? await forecastRes.json() : null;
     const air = airRes.ok ? await airRes.json() : null;
