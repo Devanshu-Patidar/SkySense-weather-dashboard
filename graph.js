@@ -2,6 +2,7 @@ const API_KEY = "e07a658e5d45c967a443c11cf3b4d0c6";
 const FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const AIR_POLLUTION_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
 const WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather";
+const OPEN_METEO_UV = "https://api.open-meteo.com/v1/forecast";
 const AQI_LABELS = ["", "Good", "Satisfactory", "Moderate", "Poor", "Very Poor", "Severe"];
 const AQI_DESCRIPTIONS = ["", "Good air quality.", "Satisfactory air quality.", "Moderate — sensitive people may be affected.", "Poor air quality.", "Very poor — health alert.", "Severe — health emergency."];
 function pm25ToAQI(pm25) {
@@ -68,6 +69,10 @@ const aqiDescEl = document.getElementById("aqiDesc");
 const aqiMarkerEl = document.getElementById("aqiMarker");
 const graphStatusEl = document.getElementById("graphStatus");
 const graphThemeToggle = document.getElementById("graphThemeToggle");
+const graphUvValueEl = document.getElementById("graphUvValue");
+const graphUvSubEl = document.getElementById("graphUvSub");
+const graphSunriseEl = document.getElementById("graphSunrise");
+const graphSunsetEl = document.getElementById("graphSunset");
 
 let tempChart = null;
 let humidityChart = null;
@@ -77,6 +82,39 @@ function setStatus(msg, isError) {
   if (graphStatusEl) {
     graphStatusEl.textContent = msg || "";
     graphStatusEl.style.color = isError ? "#fecaca" : "#bfdbfe";
+  }
+}
+
+function formatLocationClockFromUnix(utcUnixSeconds, timezoneOffsetSeconds) {
+  if (utcUnixSeconds == null || timezoneOffsetSeconds == null) return "—";
+  const d = new Date((utcUnixSeconds + timezoneOffsetSeconds) * 1000);
+  const h = d.getUTCHours().toString().padStart(2, "0");
+  const m = d.getUTCMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+function uvTierLabel(uvi) {
+  if (uvi == null || Number.isNaN(uvi)) return "";
+  if (uvi < 3) return "Low";
+  if (uvi < 6) return "Moderate";
+  if (uvi < 8) return "High";
+  if (uvi < 11) return "Very high";
+  return "Extreme";
+}
+
+async function fetchUvIndexOpenMeteo(lat, lon) {
+  const la = Number(lat);
+  const lo = Number(lon);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  try {
+    const url = `${OPEN_METEO_UV}?latitude=${la}&longitude=${lo}&current=uv_index&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const j = await res.json();
+    const uvi = j?.current?.uv_index;
+    return typeof uvi === "number" && Number.isFinite(uvi) ? uvi : null;
+  } catch {
+    return null;
   }
 }
 
@@ -398,14 +436,23 @@ if (graphThemeToggle) {
 async function init() {
   initGraphTheme();
   const result = await fetchData();
-  if (!result) return;
-  const { forecast, air, weather } = result;
-  const tz = forecast?.city?.timezone ?? 0;
-  if (weather?.name) {
-    graphLocationEl.textContent = `${weather.name}, ${weather.sys?.country ?? ""}`;
-  } else {
-    graphLocationEl.textContent = `Lat ${lat}, Lon ${lon}`;
+  if (!result) {
+    return;
   }
+  const { forecast, air, weather } = result;
+  const tz = forecast?.city?.timezone ?? weather?.timezone ?? 0;
+  if (graphLocationEl) {
+    if (weather?.name) {
+      graphLocationEl.textContent = `${weather.name}, ${weather.sys?.country ?? ""}`;
+    } else {
+      graphLocationEl.textContent = `Lat ${lat}, Lon ${lon}`;
+    }
+  }
+  const uv = await fetchUvIndexOpenMeteo(lat, lon);
+  if (graphUvValueEl) graphUvValueEl.textContent = uv != null ? uv.toFixed(1) : "—";
+  if (graphUvSubEl) graphUvSubEl.textContent = uv != null ? uvTierLabel(uv) : "";
+  if (graphSunriseEl) graphSunriseEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunrise, tz);
+  if (graphSunsetEl) graphSunsetEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunset, tz);
   const list24 = build24hData(forecast.list, tz);
   const hourlyList = buildHourly24h(forecast.list || [], tz);
   const chartList = hourlyList.length >= 12 ? hourlyList : list24.length > 0 ? list24 : (forecast.list || []).slice(0, 8);
