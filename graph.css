@@ -4,6 +4,184 @@
   overflow-x: hidden;
 }
 
+.graph-sun-uv-section .graph-sun-uv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.graph-sun-uv-section {
+  /* Make only this section feel special */
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.12) 0%,
+    rgba(99, 102, 241, 0.1) 35%,
+    rgba(15, 23, 42, 0.95) 100%
+  );
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.65),
+    0 0 0 1px rgba(56, 189, 248, 0.14) inset;
+}
+
+.graph-sun-uv-section::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.18), transparent 50%),
+    radial-gradient(circle at 50% 120%, rgba(249, 115, 22, 0.08), transparent 55%);
+  pointer-events: none;
+}
+
+.graph-sun-uv-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.graph-sun-uv-section h2 {
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 600px) {
+  .graph-sun-uv-section .graph-sun-uv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graph-sun-uv-item {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.graph-sun-uv-item::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    115deg,
+    rgba(56, 189, 248, 0) 20%,
+    rgba(56, 189, 248, 0.14) 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transform: translateX(-15%);
+  transition: opacity 180ms ease, transform 420ms ease;
+  pointer-events: none;
+}
+
+.graph-sun-uv-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.65);
+}
+
+.graph-sun-uv-item:hover::after {
+  opacity: 1;
+  transform: translateX(15%);
+}
+
+.graph-sun-uv-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
+}
+
+.graph-sun-uv-value {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* Sunrise / Sunset icons on the right-top corner (near the time) */
+#graphSunrise,
+#graphSunset {
+  position: relative;
+  padding-right: 2.1rem; /* space for the icon on the right */
+}
+
+#graphSunrise::after {
+  content: "🌅";
+  position: absolute;
+  top: -0.1rem;
+  right: 0;
+  font-size: 1.35em;
+  line-height: 1;
+}
+
+#graphSunset::after {
+  content: "🌇";
+  position: absolute;
+  top: -0.1rem;
+  right: 0;
+  font-size: 1.35em;
+  line-height: 1;
+}
+
+.graph-sun-uv-sub {
+  display: block;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  margin-top: 0.2rem;
+}
+
+/* Distinct accents for: UV / Sunrise / Sunset */
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(1) {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.24) 0%,
+    rgba(99, 102, 241, 0.14) 55%,
+    rgba(30, 41, 59, 0.55) 100%
+  );
+}
+
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(1) .graph-sun-uv-label {
+  color: #60a5fa;
+}
+
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(2) {
+  border-color: rgba(245, 158, 11, 0.42);
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.22) 0%,
+    rgba(249, 115, 22, 0.14) 55%,
+    rgba(30, 41, 59, 0.55) 100%
+  );
+}
+
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(2) .graph-sun-uv-label {
+  color: #fbbf24;
+}
+
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(3) {
+  border-color: rgba(244, 63, 94, 0.38);
+  background: linear-gradient(
+    135deg,
+    rgba(244, 63, 94, 0.18) 0%,
+    rgba(99, 102, 241, 0.14) 55%,
+    rgba(30, 41, 59, 0.55) 100%
+  );
+}
+
+.graph-sun-uv-grid > .graph-sun-uv-item:nth-child(3) .graph-sun-uv-label {
+  color: #fb7185;
+}
+
 .graph-page,
 .graph-main,
 .graph-section,
@@ -100,6 +278,42 @@
   margin: 0 0 1rem;
   font-size: 1rem;
 }
+.graph-sun-uv-section {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.12) 0%,
+    rgba(99, 102, 241, 0.1) 35%,
+    rgba(15, 23, 42, 0.95) 100%
+  );
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.65),
+    0 0 0 1px rgba(56, 189, 248, 0.14) inset;
+}
+
+.graph-sun-uv-section::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.18), transparent 50%),
+    radial-gradient(circle at 50% 120%, rgba(249, 115, 22, 0.08), transparent 55%);
+  pointer-events: none;
+}
+
+.graph-sun-uv-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.graph-sun-uv-section h2 {
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
 .chart-wrap {
   position: relative;
   width: 100%;
@@ -211,6 +425,84 @@ html.theme-light .graph-section {
 html.theme-light .graph-section h2 {
   color: #111827;
 }
+
+html.theme-light .graph-sun-uv-section {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.16) 0%,
+    rgba(99, 102, 241, 0.12) 35%,
+    #ffffff 100%
+  );
+  box-shadow:
+    0 18px 45px rgba(148, 163, 184, 0.2),
+    0 0 0 1px rgba(56, 189, 248, 0.12) inset;
+}
+
+html.theme-light .graph-sun-uv-section::before {
+  opacity: 0.55;
+}
+
+html.theme-light .graph-sun-uv-item {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 12px 26px rgba(148, 163, 184, 0.22);
+}
+
+html.theme-light .graph-sun-uv-label {
+  color: #6b7280;
+}
+
+html.theme-light .graph-sun-uv-value {
+  color: #111827;
+}
+
+html.theme-light .graph-sun-uv-sub {
+  color: #4b5563;
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(1) {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.14) 0%,
+    rgba(99, 102, 241, 0.12) 55%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(1) .graph-sun-uv-label {
+  color: #2563eb;
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(2) {
+  border-color: rgba(245, 158, 11, 0.48);
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.16) 0%,
+    rgba(249, 115, 22, 0.12) 55%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(2) .graph-sun-uv-label {
+  color: #d97706;
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(3) {
+  border-color: rgba(244, 63, 94, 0.42);
+  background: linear-gradient(
+    135deg,
+    rgba(244, 63, 94, 0.12) 0%,
+    rgba(99, 102, 241, 0.1) 55%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+}
+
+html.theme-light .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(3) .graph-sun-uv-label {
+  color: #e11d48;
+}
+
 html.theme-light .graph-location {
   color: #4b5563;
 }
@@ -258,11 +550,15 @@ html.theme-light .graph-status {
 
   .graph-header {
     margin-bottom: 1.1rem;
+    padding-top: 2.4rem;
   }
 
   .graph-theme-toggle {
-    position: static;
-    margin-bottom: 0.55rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 5;
+    margin-bottom: 0;
   }
 
   .graph-header h1 {

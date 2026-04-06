@@ -53,6 +53,14 @@
           <i class="badge-icon fa-solid fa-lightbulb" aria-hidden="true"></i>
           <span>Smart Suggestions</span>
         </div>
+        <div class="hero-badge">
+          <i class="badge-icon fa-solid fa-sun" aria-hidden="true"></i>
+          <span>UV &amp; Sun Times</span>
+        </div>
+        <div class="hero-badge">
+          <i class="badge-icon fa-solid fa-bell" aria-hidden="true"></i>
+          <span>Weather Alerts</span>
+        </div>
       </div>
       <div class="hero-highlights">
         <div class="highlight-card">
@@ -78,7 +86,7 @@
     <section class="dashboard" id="dashboard">
       <div class="dashboard-header">
         <h2>Live Weather Dashboard</h2>
-        <p>Check real-time weather, feels-like conditions, and simple preparation tips.</p>
+        <p>Check real-time weather, UV, sunrise and sunset, weather alerts, feels-like conditions, and simple preparation tips.</p>
       </div>
       <div class="search-row">
         <div class="search-group">
@@ -132,6 +140,22 @@
               <span class="label">Min / Max</span>
               <span id="minMax">-- / -- °C</span>
             </div>
+            <div>
+              <span class="label">UV index</span>
+              <span id="uvIndex">—</span>
+            </div>
+            <div>
+              <span class="label">Sunrise</span>
+              <span id="sunriseTime">--:--</span>
+            </div>
+            <div>
+              <span class="label">Sunset</span>
+              <span id="sunsetTime">--:--</span>
+            </div>
+            <div>
+              <span class="label">Visibility</span>
+              <span id="visibility">—</span>
+            </div>
           </div>
 
           <p class="updated-time" id="updatedTime">Last updated: --</p>
@@ -174,6 +198,27 @@
           </p>
           <div class="forecast-grid" id="forecastGrid" aria-label="5-day forecast">
           </div>
+        </article>
+        <article class="card weather-alerts-card" id="alertsCard">
+          <header class="weather-alerts-banner">
+            <div class="weather-alerts-banner-icon" aria-hidden="true">
+              <span class="weather-alerts-banner-glyph" aria-hidden="true">🔔</span>
+            </div>
+            <div class="weather-alerts-banner-text">
+              <h3>Weather Alerts</h3>
+              <p class="weather-alerts-lead">
+                Live-style notices for your location — for example <strong>storm</strong> or <strong>heavy rain warning</strong> when conditions match.
+              </p>
+            </div>
+          </header>
+          <div id="alertsList" class="wx-alerts-feed" aria-live="polite" aria-label="Weather alerts list"></div>
+          <footer class="weather-alerts-footer">
+            <label class="notify-label">
+              <input type="checkbox" id="notifySevereToggle" />
+              <span>Browser notifications for warnings and severe alerts</span>
+            </label>
+            <p class="notify-hint" id="notifyHint"></p>
+          </footer>
         </article>
       </div>
     </section>

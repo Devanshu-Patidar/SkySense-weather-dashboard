@@ -18,6 +18,24 @@
     <p class="graph-location" id="graphLocation">Loading...</p>
   </header>
   <main class="graph-main">
+    <section class="graph-section graph-sun-uv-section" aria-label="Sun and UV">
+      <h2>Sun &amp; UV</h2>
+      <div class="graph-sun-uv-grid">
+        <div class="graph-sun-uv-item">
+          <span class="graph-sun-uv-label">UV index</span>
+          <span class="graph-sun-uv-value" id="graphUvValue">—</span>
+          <span class="graph-sun-uv-sub" id="graphUvSub"></span>
+        </div>
+        <div class="graph-sun-uv-item">
+          <span class="graph-sun-uv-label">Sunrise</span>
+          <span class="graph-sun-uv-value" id="graphSunrise">—</span>
+        </div>
+        <div class="graph-sun-uv-item">
+          <span class="graph-sun-uv-label">Sunset</span>
+          <span class="graph-sun-uv-value" id="graphSunset">—</span>
+        </div>
+      </div>
+    </section>
     <section class="graph-section">
       <h2>Temperature (°C)</h2>
       <div class="chart-wrap"><canvas id="tempChart"></canvas></div>

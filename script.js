@@ -43,6 +43,8 @@ const API_KEY = "e07a658e5d45c967a443c11cf3b4d0c6";
 const API_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 const FORECAST_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0/direct";
+/** UV from Open-Meteo (no API key; coordinates only). */
+const OPEN_METEO_UV = "https://api.open-meteo.com/v1/forecast";
 const openDashboardBtn = document.getElementById("openDashboardBtn");
 const themeToggleBtn = document.getElementById("themeToggle");
 const dashboardSection = document.getElementById("dashboard");
@@ -67,7 +69,15 @@ const moodLineEl = document.getElementById("moodLine");
 const forecastGridEl = document.getElementById("forecastGrid");
 const hourlyTimelineEl = document.getElementById("hourlyTimeline");
 const showGraphBtn = document.getElementById("showGraphBtn");
+const uvIndexEl = document.getElementById("uvIndex");
+const sunriseTimeEl = document.getElementById("sunriseTime");
+const sunsetTimeEl = document.getElementById("sunsetTime");
+const visibilityEl = document.getElementById("visibility");
+const alertsListEl = document.getElementById("alertsList");
+const notifySevereToggle = document.getElementById("notifySevereToggle");
+const notifyHintEl = document.getElementById("notifyHint");
 let lastCoords = null;
+let lastPrepContext = null;
 
 openDashboardBtn.addEventListener("click", () => {
   dashboardSection.scrollIntoView({ behavior: "smooth" });
@@ -103,6 +113,7 @@ function initThemeFromStorage() {
   }
 }
 initThemeFromStorage();
+initNotifyControls();
 if (showGraphBtn) {
   showGraphBtn.addEventListener("click", () => {
     if (lastCoords && lastCoords.lat != null && lastCoords.lon != null) {
@@ -164,7 +175,8 @@ async function fetchWeatherByCity(city) {
     updateWeatherUI(data, {
       overrideLocationName: formatGeoLabel(geo.selected),
     });
-    fetchAndRenderForecast(geo.selected.lat, geo.selected.lon, data.timezone);
+    const fl = await fetchAndRenderForecast(geo.selected.lat, geo.selected.lon, data.timezone);
+    await updateUvAndAlerts(data, fl);
     showStatus("", "info");
   } catch (error) {
     console.error(error);
@@ -187,7 +199,8 @@ async function fetchWeatherByCoords(lat, lon, options = {}) {
     const data = await response.json();
     if (!options.silent) {
       updateWeatherUI(data);
-      fetchAndRenderForecast(lat, lon, data.timezone);
+      const fl = await fetchAndRenderForecast(lat, lon, data.timezone);
+      await updateUvAndAlerts(data, fl);
       showStatus("", "info");
     }
     return data;
@@ -220,6 +233,11 @@ function updateWeatherUI(data, options = {}) {
   humidityEl.textContent = `${humidity}%`;
   windEl.textContent = `${Math.round(windSpeed * 3.6)} km/h`;
   minMaxEl.textContent = `${minTemp} / ${maxTemp} °C`;
+  const tz = data.timezone ?? 0;
+  if (sunriseTimeEl) sunriseTimeEl.textContent = formatLocationClockFromUnix(data.sys?.sunrise, tz);
+  if (sunsetTimeEl) sunsetTimeEl.textContent = formatLocationClockFromUnix(data.sys?.sunset, tz);
+  if (visibilityEl) visibilityEl.textContent = formatVisibilityMeters(data.visibility);
+  if (uvIndexEl) uvIndexEl.textContent = "…";
   if (iconCode) {
     setWeatherIconElement(weatherIconEl, iconCode, weatherDescription || "Weather conditions");
     weatherIconEl.classList.remove("hidden");
@@ -236,14 +254,16 @@ function updateWeatherUI(data, options = {}) {
   if (showGraphBtn) {
     showGraphBtn.disabled = !(lastCoords?.lat != null && lastCoords?.lon != null);
   }
-  applyPreparationSuggestions({
+  lastPrepContext = {
     temp: temperature,
     feelsLike,
     main: weatherMain,
     description: weatherDescription,
     humidity,
     windSpeedKmh: Math.round(windSpeed * 3.6),
-  });
+    uvIndex: null,
+  };
+  applyPreparationSuggestions(lastPrepContext);
 }
 
 function showStatus(message, type) {
@@ -254,8 +274,15 @@ function showStatus(message, type) {
   }
 }
 function applyPreparationSuggestions(context) {
-  const { temp, feelsLike, main, description, humidity, windSpeedKmh } = context;
-  const outfit = buildOutfitSuggestion(temp, main, humidity, windSpeedKmh);
+  const { temp, feelsLike, main, description, humidity, windSpeedKmh, uvIndex } = context;
+  let outfit = buildOutfitSuggestion(temp, main, humidity, windSpeedKmh);
+  if (uvIndex != null && Number.isFinite(uvIndex)) {
+    if (uvIndex >= 8) {
+      outfit += " Strong sun (UV)—use SPF 30+ sunscreen, a hat, and shade during peak hours.";
+    } else if (uvIndex >= 6) {
+      outfit += " UV is elevated—sunscreen helps if you will be outside for a while.";
+    }
+  }
   const activity = buildActivitySuggestion(temp, main);
   const mood = buildMoodLine(temp, main, description);
   prepSummaryEl.textContent =
@@ -364,6 +391,250 @@ function formatDateTime(date) {
   const month = monthNames[date.getMonth()] || "";
   const time = formatTime(date);
   return `${day} ${month}, ${time}`;
+}
+
+/** OpenWeather local wall time: (unix UTC + city offset) then read as UTC components. */
+function formatLocationClockFromUnix(utcUnixSeconds, timezoneOffsetSeconds) {
+  if (utcUnixSeconds == null || timezoneOffsetSeconds == null) return "--:--";
+  const d = new Date((utcUnixSeconds + timezoneOffsetSeconds) * 1000);
+  const h = d.getUTCHours().toString().padStart(2, "0");
+  const m = d.getUTCMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+function formatVisibilityMeters(m) {
+  if (m == null || m === undefined || Number.isNaN(m)) return "—";
+  if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
+  return `${Math.round(m)} m`;
+}
+
+function uvTierLabel(uvi) {
+  if (uvi == null || Number.isNaN(uvi)) return "";
+  if (uvi < 3) return "Low";
+  if (uvi < 6) return "Moderate";
+  if (uvi < 8) return "High";
+  if (uvi < 11) return "Very high";
+  return "Extreme";
+}
+
+async function fetchUvIndexOpenMeteo(lat, lon) {
+  const la = Number(lat);
+  const lo = Number(lon);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  try {
+    const url = `${OPEN_METEO_UV}?latitude=${la}&longitude=${lo}&current=uv_index&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const j = await res.json();
+    const uvi = j?.current?.uv_index;
+    return typeof uvi === "number" && Number.isFinite(uvi) ? uvi : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildWeatherAlerts(weather, forecastList, uvIndex) {
+  const alerts = [];
+  if (!weather) return alerts;
+
+  const wid = weather.weather?.[0]?.id;
+  const main = weather.weather?.[0]?.main ?? "";
+  const desc = weather.weather?.[0]?.description ?? "";
+  const windMs = weather.wind?.speed;
+  const windKmh = typeof windMs === "number" ? Math.round(windMs * 3.6) : null;
+  const temp = weather.main?.temp;
+
+  const push = (level, id, tag, title, text, iconClass) => {
+    alerts.push({ level, id, tag, title, text, iconClass });
+  };
+
+  if (typeof wid === "number") {
+    if (wid >= 200 && wid < 300) {
+      push("severe", "storm", "STORM WARNING", "Thunderstorm", "Thunderstorms in the area. Seek shelter, avoid open ground and tall trees, and stay updated.", "fa-solid fa-bolt");
+    } else if (wid >= 502 && wid <= 504) {
+      push("severe", "heavy-rain", "HEAVY RAIN WARNING", "Heavy rainfall", "Very heavy rainfall possible. Watch for water on roads and avoid low-lying areas.", "fa-solid fa-cloud-showers-heavy");
+    } else if (wid >= 600 && wid <= 602) {
+      push("warning", "snow", "WINTER ADVISORY", "Snow", "Snow or sleet — plan for slower travel and dress in warm layers.", "fa-solid fa-snowflake");
+    } else if (wid >= 781 || wid === 900) {
+      push("severe", "extreme", "EXTREME WEATHER", "Dangerous conditions", "Dangerous weather reported for this location. Follow official guidance.", "fa-solid fa-triangle-exclamation");
+    }
+  }
+
+  if (/thunderstorm/i.test(main) && !alerts.some((a) => a.id === "storm")) {
+    push("warning", "storm-soft", "STORM ADVISORY", "Stormy conditions", capitalizeFirstLetter(desc || main) + ". Stay aware if you are outdoors.", "fa-solid fa-cloud-bolt");
+  }
+
+  if (windKmh != null && windKmh >= 70) {
+    push("severe", "wind-high", "HIGH WIND WARNING", "Very strong wind", `Winds around ${windKmh} km/h. Secure loose items and take care if driving.`, "fa-solid fa-wind");
+  } else if (windKmh != null && windKmh >= 45) {
+    push("warning", "wind", "WIND ADVISORY", "Strong wind", `Winds around ${windKmh} km/h — a jacket and caution on bridges or exposed paths help.`, "fa-solid fa-wind");
+  }
+
+  if (typeof temp === "number") {
+    if (temp >= 38) {
+      push("warning", "heat", "HEAT ADVISORY", "Extreme heat", "Very high temperature. Hydrate, avoid strenuous midday activity, and watch for heat stress.", "fa-solid fa-temperature-high");
+    } else if (temp <= -8) {
+      push("warning", "cold", "COLD ADVISORY", "Freezing cold", "Very low temperature. Layer up, cover skin, and limit time outside.", "fa-solid fa-temperature-low");
+    }
+  }
+
+  if (uvIndex != null && uvIndex >= 11) {
+    push("severe", "uv-extreme", "EXTREME UV ALERT", "Extreme UV", "UV is extreme. Minimize midday sun, use SPF 30+ sunscreen, hat, and shade.", "fa-solid fa-sun");
+  } else if (uvIndex != null && uvIndex >= 8) {
+    push("warning", "uv-high", "HIGH UV ADVISORY", "High UV", "UV is very high. Sunscreen, hat, and breaks in the shade are important today.", "fa-solid fa-sun");
+  }
+
+  const list = Array.isArray(forecastList) ? forecastList : [];
+  const now = Math.floor(Date.now() / 1000);
+  const soon = list.filter((e) => e && typeof e.dt === "number" && e.dt >= now && e.dt <= now + 6 * 3600);
+  const rainSoon = soon.some((e) => {
+    const id = e.weather?.[0]?.id;
+    const m = e.weather?.[0]?.main ?? "";
+    return (typeof id === "number" && id >= 500 && id < 600) || /rain|drizzle|thunderstorm/i.test(m);
+  });
+  if (rainSoon && !/rain|drizzle|thunderstorm/i.test(main)) {
+    push("info", "rain-ahead", "RAIN OUTLOOK", "Rain expected soon", "Forecast suggests wet conditions in the next several hours. Carry cover if you head out.", "fa-solid fa-umbrella");
+  }
+
+  const order = { severe: 0, warning: 1, info: 2 };
+  alerts.sort((a, b) => order[a.level] - order[b.level]);
+  return alerts;
+}
+
+function renderAlertsList(alerts) {
+  if (!alertsListEl) return;
+  alertsListEl.innerHTML = "";
+  if (!alerts || alerts.length === 0) {
+    const wrap = document.createElement("div");
+    wrap.className = "wx-alerts-empty-state";
+    const t = document.createElement("p");
+    t.className = "wx-alerts-empty-title";
+    t.textContent = "No active alerts";
+    const d = document.createElement("p");
+    d.className = "wx-alerts-empty-desc";
+    d.textContent =
+      "Load a location to see notices here. We surface types like storm or heavy rain warning when the live and forecast data match.";
+    const chips = document.createElement("div");
+    chips.className = "wx-alerts-demo-chips";
+    chips.setAttribute("aria-hidden", "true");
+    [["Storm", "wx-demo-severe"], ["Heavy rain warning", "wx-demo-warning"], ["High wind", "wx-demo-wind"]].forEach(([label, cls]) => {
+      const s = document.createElement("span");
+      s.className = `wx-demo-chip ${cls}`;
+      s.textContent = label;
+      chips.appendChild(s);
+    });
+    wrap.appendChild(t);
+    wrap.appendChild(d);
+    wrap.appendChild(chips);
+    alertsListEl.appendChild(wrap);
+    return;
+  }
+  alerts.forEach((a) => {
+    const block = document.createElement("div");
+    block.className = `wx-alert-block wx-alert-${a.level}`;
+    const accent = document.createElement("div");
+    accent.className = "wx-alert-accent";
+    accent.setAttribute("aria-hidden", "true");
+    const inner = document.createElement("div");
+    inner.className = "wx-alert-inner";
+    const top = document.createElement("div");
+    top.className = "wx-alert-top";
+    const pill = document.createElement("span");
+    pill.className = "wx-alert-pill";
+    pill.textContent = a.tag || "WEATHER NOTICE";
+    const ic = document.createElement("i");
+    ic.className = `wx-alert-icon ${a.iconClass || "fa-solid fa-circle-info"}`;
+    ic.setAttribute("aria-hidden", "true");
+    top.appendChild(pill);
+    top.appendChild(ic);
+    const headline = document.createElement("h4");
+    headline.className = "wx-alert-headline";
+    headline.textContent = a.title;
+    const detail = document.createElement("p");
+    detail.className = "wx-alert-detail";
+    detail.textContent = a.text;
+    inner.appendChild(top);
+    inner.appendChild(headline);
+    inner.appendChild(detail);
+    block.appendChild(accent);
+    block.appendChild(inner);
+    alertsListEl.appendChild(block);
+  });
+}
+
+function maybeBrowserNotify(alerts) {
+  if (!notifySevereToggle?.checked) return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const notable = alerts.filter((a) => a.level === "severe" || a.level === "warning");
+  if (notable.length === 0) return;
+  const key = notable.map((a) => a.id).sort().join("|");
+  try {
+    if (sessionStorage.getItem("skysense-notify-key") === key) return;
+    sessionStorage.setItem("skysense-notify-key", key);
+  } catch {
+  }
+  const first = notable[0];
+  try {
+    new Notification("SkySense — Weather Alerts", {
+      body: `${first.title}: ${first.text}`.slice(0, 240),
+      tag: "skysense-weather",
+    });
+  } catch {
+  }
+}
+
+function updateNotifyHint() {
+  if (!notifyHintEl) return;
+  if (typeof Notification === "undefined") {
+    notifyHintEl.textContent = "This browser does not support notifications.";
+    return;
+  }
+  if (Notification.permission === "denied") {
+    notifyHintEl.textContent = "Notifications are blocked for this site. Change it in browser settings if you want alerts.";
+    return;
+  }
+  notifyHintEl.textContent = "";
+}
+
+function initNotifyControls() {
+  updateNotifyHint();
+  if (!notifySevereToggle) return;
+  try {
+    notifySevereToggle.checked = localStorage.getItem("skysense-notify-severe") === "1";
+  } catch {
+  }
+  notifySevereToggle.addEventListener("change", async () => {
+    try {
+      localStorage.setItem("skysense-notify-severe", notifySevereToggle.checked ? "1" : "0");
+    } catch {
+    }
+    if (notifySevereToggle.checked && typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch {
+      }
+    }
+    updateNotifyHint();
+  });
+}
+
+async function updateUvAndAlerts(weather, forecastList) {
+  const lat = weather?.coord?.lat;
+  const lon = weather?.coord?.lon;
+  const uv = await fetchUvIndexOpenMeteo(lat, lon);
+  if (uvIndexEl) {
+    if (uv == null) uvIndexEl.textContent = "—";
+    else {
+      const tier = uvTierLabel(uv);
+      uvIndexEl.textContent = `${uv.toFixed(1)} · ${tier}`;
+    }
+  }
+  if (lastPrepContext) {
+    applyPreparationSuggestions({ ...lastPrepContext, uvIndex: uv });
+  }
+  const alerts = buildWeatherAlerts(weather, forecastList, uv);
+  renderAlertsList(alerts);
+  maybeBrowserNotify(alerts);
 }
 
 async function buildReadableApiError(response) {
@@ -476,7 +747,8 @@ function renderCityMatches(matches, selectedKey) {
         showStatus(`Loading weather for "${btn.textContent}"...`, "info");
         const data = await fetchWeatherByCoords(m.lat, m.lon, { silent: true });
         updateWeatherUI(data, { overrideLocationName: formatGeoLabel(m) });
-        fetchAndRenderForecast(m.lat, m.lon, data.timezone);
+        const fl = await fetchAndRenderForecast(m.lat, m.lon, data.timezone);
+        await updateUvAndAlerts(data, fl);
         renderCityMatches(matches, key);
         showStatus("", "info");
       } catch (e) {
@@ -504,25 +776,27 @@ function geoKey(m) {
   return `${name}|${state}|${country}|${lat}|${lon}`;
 }
 async function fetchAndRenderForecast(lat, lon, timezoneOffsetSeconds) {
-  if ((!forecastGridEl && !hourlyTimelineEl) || !validateApiKey()) return;
+  if ((!forecastGridEl && !hourlyTimelineEl) || !validateApiKey()) return [];
   try {
     if (forecastGridEl) forecastGridEl.innerHTML = "";
     if (hourlyTimelineEl) hourlyTimelineEl.innerHTML = "";
     const url = `${FORECAST_BASE_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
     const response = await fetch(url);
     if (!response.ok) {
-      return;
+      return [];
     }
     const data = await response.json();
     if (!Array.isArray(data.list) || data.list.length === 0) {
-      return;
+      return [];
     }
     const tz = timezoneOffsetSeconds ?? data.city?.timezone ?? 0;
     const daily = buildDailyForecastSummary(data.list, tz);
     renderForecast(daily);
     const hourly = build12HourTimeline(data.list, tz);
     renderHourlyTimeline(hourly);
+    return data.list;
   } catch {
+    return [];
   }
 }
 function build12HourTimeline(list, timezoneOffsetSeconds) {
