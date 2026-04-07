@@ -99,6 +99,14 @@ const graphUvValueEl = document.getElementById("graphUvValue");
 const graphUvSubEl = document.getElementById("graphUvSub");
 const graphSunriseEl = document.getElementById("graphSunrise");
 const graphSunsetEl = document.getElementById("graphSunset");
+const graphPageLoaderEl = document.getElementById("graphPageLoader");
+
+function hideGraphPageLoader() {
+  if (!graphPageLoaderEl) return;
+  graphPageLoaderEl.classList.add("hidden");
+  graphPageLoaderEl.setAttribute("aria-hidden", "true");
+  graphPageLoaderEl.setAttribute("aria-busy", "false");
+}
 
 let tempChart = null;
 let humidityChart = null;
@@ -222,10 +230,14 @@ function formatTimeLabelWithDay(utcSeconds, tzOffset) {
   return dayPrefix ? `${dayPrefix} ${timeStr}` : timeStr;
 }
 
-function interpolateTemp(list, timestamp) {
-  if (!list || list.length === 0) return null;
-  if (list.length === 1) return list[0].main?.temp ?? 0;
-  const sorted = [...list].sort((a, b) => a.dt - b.dt);
+function sortForecastByDt(list) {
+  if (!list || list.length === 0) return [];
+  return [...list].sort((a, b) => a.dt - b.dt);
+}
+
+function interpolateTempSorted(sorted, timestamp) {
+  if (!sorted || sorted.length === 0) return null;
+  if (sorted.length === 1) return sorted[0].main?.temp ?? 0;
   if (timestamp <= sorted[0].dt) return sorted[0].main?.temp ?? 0;
   if (timestamp >= sorted[sorted.length - 1].dt) return sorted[sorted.length - 1].main?.temp ?? 0;
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -241,10 +253,9 @@ function interpolateTemp(list, timestamp) {
   return null;
 }
 
-function interpolateHumidity(list, timestamp) {
-  if (!list || list.length === 0) return null;
-  if (list.length === 1) return list[0].main?.humidity ?? 0;
-  const sorted = [...list].sort((a, b) => a.dt - b.dt);
+function interpolateHumiditySorted(sorted, timestamp) {
+  if (!sorted || sorted.length === 0) return null;
+  if (sorted.length === 1) return sorted[0].main?.humidity ?? 0;
   if (timestamp <= sorted[0].dt) return sorted[0].main?.humidity ?? 0;
   if (timestamp >= sorted[sorted.length - 1].dt) return sorted[sorted.length - 1].main?.humidity ?? 0;
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -261,12 +272,14 @@ function interpolateHumidity(list, timestamp) {
 }
 
 function buildHourly24h(list, tzOffset) {
+  const sorted = sortForecastByDt(list);
+  if (sorted.length === 0) return [];
   const now = Math.floor(Date.now() / 1000);
   const hourly = [];
   for (let i = 0; i < 24; i++) {
     const dt = now + i * 3600;
-    const temp = interpolateTemp(list, dt);
-    const humidity = interpolateHumidity(list, dt);
+    const temp = interpolateTempSorted(sorted, dt);
+    const humidity = interpolateHumiditySorted(sorted, dt);
     if (temp != null) {
       hourly.push({
         dt,
@@ -293,9 +306,11 @@ async function fetchData() {
       fetch(`${AIR_POLLUTION_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}`),
       fetch(`${WEATHER_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}`),
     ]);
-    const forecast = forecastRes.ok ? await forecastRes.json() : null;
-    const air = airRes.ok ? await airRes.json() : null;
-    const weather = weatherRes.ok ? await weatherRes.json() : null;
+    const [forecast, air, weather] = await Promise.all([
+      forecastRes.ok ? forecastRes.json() : Promise.resolve(null),
+      airRes.ok ? airRes.json() : Promise.resolve(null),
+      weatherRes.ok ? weatherRes.json() : Promise.resolve(null),
+    ]);
     if (!forecast || !Array.isArray(forecast.list)) {
       setStatus("Could not load forecast.", true);
       return null;
@@ -544,31 +559,37 @@ if (graphThemeToggle) {
 
 async function init() {
   initGraphTheme();
-  const result = await fetchData();
-  if (!result) {
-    return;
-  }
-  const { forecast, air, weather } = result;
-  const tz = forecast?.city?.timezone ?? weather?.timezone ?? 0;
-  if (graphLocationEl) {
-    if (weather?.name) {
-      graphLocationEl.textContent = `${weather.name}, ${weather.sys?.country ?? ""}`;
-    } else {
-      graphLocationEl.textContent = `Lat ${lat}, Lon ${lon}`;
+  try {
+    const [result, uv] = await Promise.all([
+      fetchData(),
+      lat && lon ? fetchUvIndexOpenMeteo(lat, lon) : Promise.resolve(null),
+    ]);
+    if (!result) {
+      return;
     }
+    const { forecast, air, weather } = result;
+    const tz = forecast?.city?.timezone ?? weather?.timezone ?? 0;
+    if (graphLocationEl) {
+      if (weather?.name) {
+        graphLocationEl.textContent = `${weather.name}, ${weather.sys?.country ?? ""}`;
+      } else {
+        graphLocationEl.textContent = `Lat ${lat}, Lon ${lon}`;
+      }
+    }
+    if (graphUvValueEl) graphUvValueEl.textContent = uv != null ? uv.toFixed(1) : "—";
+    if (graphUvSubEl) graphUvSubEl.textContent = uv != null ? uvTierLabel(uv) : "";
+    if (graphSunriseEl) graphSunriseEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunrise, tz);
+    if (graphSunsetEl) graphSunsetEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunset, tz);
+    const list24 = build24hData(forecast.list, tz);
+    const hourlyList = buildHourly24h(forecast.list || [], tz);
+    const chartList = hourlyList.length >= 12 ? hourlyList : list24.length > 0 ? list24 : (forecast.list || []).slice(0, 8);
+    lastChartData = { list: chartList, tz };
+    renderTempChart(chartList, tz);
+    renderHumidityChart(chartList, tz);
+    renderAQI(air?.list?.[0] ?? null);
+  } finally {
+    hideGraphPageLoader();
   }
-  const uv = await fetchUvIndexOpenMeteo(lat, lon);
-  if (graphUvValueEl) graphUvValueEl.textContent = uv != null ? uv.toFixed(1) : "—";
-  if (graphUvSubEl) graphUvSubEl.textContent = uv != null ? uvTierLabel(uv) : "";
-  if (graphSunriseEl) graphSunriseEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunrise, tz);
-  if (graphSunsetEl) graphSunsetEl.textContent = formatLocationClockFromUnix(weather?.sys?.sunset, tz);
-  const list24 = build24hData(forecast.list, tz);
-  const hourlyList = buildHourly24h(forecast.list || [], tz);
-  const chartList = hourlyList.length >= 12 ? hourlyList : list24.length > 0 ? list24 : (forecast.list || []).slice(0, 8);
-  lastChartData = { list: chartList, tz };
-  renderTempChart(chartList, tz);
-  renderHumidityChart(chartList, tz);
-  renderAQI(air?.list?.[0] ?? null);
 }
 
 init();
