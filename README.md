@@ -6,7 +6,7 @@ Use **city search** (with country hints like `Manali, IN`) or **your current loc
 
 The **Weather Graph** page focuses on trends: **temperature** and **humidity** charts, **air quality** on a clear scale, and a **Sun & UV** block for UV index plus sunrise and sunset. The layout is **mobile-friendly**, and you can switch between **light** and **dark** theme anytime—your choice is remembered for the next visit.
 
-Repo: [Devanshu-Patidar/weather-dashboard](https://github.com/Devanshu-Patidar/weather-dashboard)
+Repo: [Devanshu-Patidar/SkySense-weather-dashboard](https://github.com/Devanshu-Patidar/SkySense-weather-dashboard)
 
 ---
 
