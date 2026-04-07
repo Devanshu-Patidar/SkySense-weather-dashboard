@@ -1,6 +1,10 @@
 # SkySense Weather
 
-Plain **HTML**, **CSS**, and **JavaScript** weather app (no frameworks). Search a city or use your location for current weather, forecast, tips, and alerts. A **graphs** page adds temperature and humidity charts, air quality, and sun/UV. Works on mobile; **light** and **dark** theme.
+**SkySense Weather** is a small, fast weather dashboard built with plain **HTML**, **CSS**, and **JavaScript**—no React, no build step, just files you can open and understand. It is meant for anyone who wants live conditions and simple, human wording instead of only numbers on the screen.
+
+Use **city search** (with country hints like `Manali, IN`) or **your current location** to load temperature, wind, humidity, visibility, and a short forecast. You also get **preparation tips** (what to wear, what to plan) and a **weather alerts** area that highlights notable conditions, with optional browser notifications if you turn them on.
+
+The **Weather Graph** page focuses on trends: **temperature** and **humidity** charts, **air quality** on a clear scale, and a **Sun & UV** block for UV index plus sunrise and sunset. The layout is **mobile-friendly**, and you can switch between **light** and **dark** theme anytime—your choice is remembered for the next visit.
 
 Repo: [Devanshu-Patidar/weather-dashboard](https://github.com/Devanshu-Patidar/weather-dashboard)
 
