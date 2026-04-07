@@ -1,12 +1,6 @@
-/**
- * Meteocons filled animated SVGs (Bas Milius, MIT).
- * Full set copied to assets/weather-icons/ (openweathermap/, darksky/, all/).
- * Preview: https://basmilius.github.io/weather-icons/index-fill.html
- * License: assets/weather-icons/LICENSE
- */
+/* Meteocons (MIT) — assets/weather-icons/LICENSE */
 const WEATHER_ICONS_BASE = "assets/weather-icons/";
 const OWM_ICON_DIR = "openweathermap/";
-/** OWM API returns icon codes like 01d, 10n — match exact Meteocons filenames */
 const OWM_ICON_FALLBACK = "03d.svg";
 
 function owmIconFilename(iconCode) {
@@ -69,7 +63,6 @@ function ensureApiKeyOrExplain() {
 const API_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 const FORECAST_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast";
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0/direct";
-/** UV from Open-Meteo (no API key; coordinates only). */
 const OPEN_METEO_UV = "https://api.open-meteo.com/v1/forecast";
 const openDashboardBtn = document.getElementById("openDashboardBtn");
 const themeToggleBtn = document.getElementById("themeToggle");
@@ -420,7 +413,6 @@ function formatDateTime(date) {
   return `${day} ${month}, ${time}`;
 }
 
-/** OpenWeather local wall time: (unix UTC + city offset) then read as UTC components. */
 function formatLocationClockFromUnix(utcUnixSeconds, timezoneOffsetSeconds) {
   if (utcUnixSeconds == null || timezoneOffsetSeconds == null) return "--:--";
   const d = new Date((utcUnixSeconds + timezoneOffsetSeconds) * 1000);

@@ -11,7 +11,6 @@
 }
 
 .graph-sun-uv-section {
-  /* Make only this section feel special */
   position: relative;
   overflow: hidden;
   border-color: rgba(56, 189, 248, 0.35);
@@ -107,11 +106,10 @@
   color: #f1f5f9;
 }
 
-/* Sunrise / Sunset icons on the right-top corner (near the time) */
 #graphSunrise,
 #graphSunset {
   position: relative;
-  padding-right: 2.1rem; /* space for the icon on the right */
+  padding-right: 2.1rem;
 }
 
 #graphSunrise::after {
@@ -139,7 +137,6 @@
   margin-top: 0.2rem;
 }
 
-/* Distinct accents for: UV / Sunrise / Sunset */
 .graph-sun-uv-grid > .graph-sun-uv-item:nth-child(1) {
   border-color: rgba(56, 189, 248, 0.4);
   background: linear-gradient(
@@ -542,7 +539,6 @@ html.theme-light .graph-status {
   color: #b91c1c;
 }
 
-/* Mobile: up to 575px */
 @media (max-width: 575px) {
   .graph-page {
     padding: 0.9rem;
@@ -591,7 +587,6 @@ html.theme-light .graph-status {
   }
 }
 
-/* Tablet: 576px to 991px */
 @media (min-width: 576px) and (max-width: 991px) {
   .graph-page {
     padding: 1.35rem;
@@ -612,7 +607,6 @@ html.theme-light .graph-status {
   }
 }
 
-/* Desktop: 992px to 1279px */
 @media (min-width: 992px) and (max-width: 1279px) {
   .graph-page {
     padding: 2rem;
@@ -631,7 +625,6 @@ html.theme-light .graph-status {
   }
 }
 
-/* Large / other screens: 1280px and above */
 @media (min-width: 1280px) {
   .graph-page {
     padding: 2.25rem 2.5rem;

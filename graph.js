@@ -135,7 +135,6 @@ function parseUvScalar(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-/** When current is missing, use hourly slot closest to now. */
 function pickHourlyUvFromOpenMeteo(j) {
   const times = j?.hourly?.time;
   const uvs = j?.hourly?.uv_index;
@@ -182,7 +181,6 @@ async function fetchUvIndexOpenMeteo(lat, lon) {
   }
 }
 
-/** Single-line labels for Chart.js (arrays become multi-line and crowd on mobile). */
 function chartLayoutNarrow() {
   return typeof window !== "undefined" && window.innerWidth <= 576;
 }
@@ -215,7 +213,6 @@ function formatTimeLabelWithDay(utcSeconds, tzOffset) {
   const dayPoint = Math.floor(totalSeconds / 86400);
   const dayNow = Math.floor(nowTotal / 86400);
   const hoursDate = new Date((utcSeconds + tz) * 1000);
-  // Same reasoning as formatTimeLabel(): we already applied tz, so read UTC hours.
   let h = hoursDate.getUTCHours();
   const suffix = h >= 12 ? "PM" : "AM";
   h = h % 12;
@@ -352,7 +349,6 @@ function renderTempChart(data, tzOffset) {
   const yMin = Math.max(-50, Math.floor(minT - pad));
   const yMax = Math.min(70, Math.ceil(maxT + pad));
   const c = getChartColors();
-  // Highlight "now" (first point) on the graph
   const pointRadius = temps.map((_, i) => (i === 0 ? 6 : 3));
   const pointBorderWidth = temps.map((_, i) => (i === 0 ? 2 : 1));
   const pointBackgroundColor = temps.map((_, i) => (i === 0 ? "#f97316" : c.tempLine));
@@ -423,7 +419,6 @@ function renderHumidityChart(data, tzOffset) {
   const nPoints = data.length;
   const hum = data.map((e) => e.main?.humidity ?? 0);
   const c = getChartColors();
-  // Highlight "now" (first point) on the humidity graph
   const pointRadius = hum.map((_, i) => (i === 0 ? 6 : 3));
   const pointBorderWidth = hum.map((_, i) => (i === 0 ? 2 : 1));
   const pointBackgroundColor = hum.map((_, i) => (i === 0 ? "#f97316" : c.barBorder));

@@ -481,7 +481,6 @@ input {
   filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.35));
 }
 
-/* Meteocons (Bas Milius): animated SVG via <object> — SMIL runs inside each document */
 .weather-icon-animated .wx-meteocon {
   width: 100%;
   height: 100%;
@@ -567,7 +566,6 @@ input {
   grid-column: 1 / -1;
 }
 
-/* —— Weather Alerts (bottom card) —— */
 .weather-alerts-card {
   overflow: hidden;
   padding: 0;
@@ -993,7 +991,6 @@ input {
   }
 }
 
-/* Mobile: up to 575px */
 @media (max-width: 575px) {
   body {
     font-size: 15px;
@@ -1060,7 +1057,6 @@ input {
   }
 
   #cityInput {
-    /* Keep the input a normal, compact size on mobile */
     height: 44px !important;
     min-height: 44px !important;
     padding: 0 0.9rem !important;
@@ -1124,7 +1120,6 @@ input {
   }
 }
 
-/* Tablet: 576px to 991px */
 @media (min-width: 576px) and (max-width: 991px) {
   .dashboard,
   .hero-content {
@@ -1156,7 +1151,6 @@ input {
   }
 }
 
-/* Desktop: 992px to 1279px */
 @media (min-width: 992px) and (max-width: 1279px) {
   .hero-content,
   .dashboard {
@@ -1172,7 +1166,6 @@ input {
   }
 }
 
-/* Large / other screens: 1280px and above */
 @media (min-width: 1280px) {
   .hero-content,
   .dashboard {
