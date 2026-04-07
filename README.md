@@ -1,8 +1,8 @@
 # SkySense Weather
 
-A **vanilla** (no framework) weather dashboard: **HTML**, **CSS**, and **JavaScript**. Search by city or use your location, see current conditions and forecasts, get plain-language preparation tips, optional weather-style alerts, and a separate **graphs** page with temperature and humidity charts plus **air quality** and **Sun & UV** details. The UI is **mobile-friendly** and supports **light / dark** theme.
+Plain **HTML**, **CSS**, and **JavaScript** weather app (no frameworks). Search a city or use your location for current weather, forecast, tips, and alerts. A **graphs** page adds temperature and humidity charts, air quality, and sun/UV. Works on mobile; **light** and **dark** theme.
 
-Repository: [github.com/Devanshu-Patidar/weather-dashboard](https://github.com/Devanshu-Patidar/weather-dashboard)
+Repo: [Devanshu-Patidar/weather-dashboard](https://github.com/Devanshu-Patidar/weather-dashboard)
 
 ---
 
@@ -95,7 +95,7 @@ Repository: [github.com/Devanshu-Patidar/weather-dashboard](https://github.com/D
 localStorage.setItem("OWM_API_KEY", "YOUR_KEY_HERE");
 ```
 
-`.gitignore` lists `config.js` so a local file is not committed by mistake. If you deploy a static host that needs the key in-repo, you may commit `config.js` for your own deployment — **the key will be public** in the browser; use a **restricted** key and rotate it if it leaks.
+`.gitignore` lists `config.js` so it is not committed by mistake. If you commit `config.js`, the key is **public** in the browser — use a restricted key when possible.
 
 ---
 
@@ -109,14 +109,6 @@ localStorage.setItem("OWM_API_KEY", "YOUR_KEY_HERE");
   ```
 
   Then open the printed URL and use the dashboard; open **Weather Graph** after loading a city so `graph.html?lat=…&lon=…` is populated.
-
----
-
-## Deploy (GitHub Pages)
-
-1. Push this repository to GitHub.
-2. **Settings → Pages → Build and deployment:** source **Deploy from a branch**, branch **`main`**, folder **`/` (root)**.
-3. After the site URL is live, add **`config.js`** on the deployed branch if the static host does not inject secrets (same public-key warning as above).
 
 ---
 
@@ -138,4 +130,4 @@ localStorage.setItem("OWM_API_KEY", "YOUR_KEY_HERE");
 
 ## License
 
-Project code: use and modify as you like for your own deployments; third-party assets remain under their respective licenses (notably Meteocons in `assets/weather-icons/`).
+Project code: use and modify freely; third-party assets stay under their own licenses (notably Meteocons in `assets/weather-icons/`).
